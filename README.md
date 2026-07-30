@@ -49,6 +49,18 @@ You can see the full documentation and list of examples at [pkg.go.dev](https://
 > _Unexported fields_ will be **ignored** by `env`.
 > This is by design and will not change.
 
+> [!IMPORTANT]
+>
+> If a field declares an `envDefault`, a variable that is **set to an empty
+> value** is handled the same way as a variable that is **not set at all**: the
+> default value is used, and neither `required` nor `notEmpty` guards against
+> it.
+>
+> `env` cannot tell a variable that is explicitly set to an empty value from one
+> that is unset, so if that difference matters for a field, leave out the
+> `envDefault` and check `os.LookupEnv` yourself before applying a fallback.
+> See the [runnable example](https://pkg.go.dev/github.com/caarlos0/env/v11#example-Parse-EmptyValue).
+
 ### Functions
 
 - `Parse`: parse the current environment into a type
@@ -93,7 +105,8 @@ You may also add custom parsers for your types.
 The following tags are provided:
 
 - `env`: sets the environment variable name and optionally takes the tag options described below
-- `envDefault`: sets the default value for the field
+- `envDefault`: sets the default value for the field, also used when the
+  variable is set but empty (see [Caveats](#caveats))
 - `envPrefix`: can be used in a field that is a complex type to set a prefix to all environment variables used in it
 - `envSeparator`: sets the character to be used to separate items in slices and maps (default: `,`)
 - `envKeyValSeparator`: sets the character to be used to separate keys and their values in maps (default: `:`)

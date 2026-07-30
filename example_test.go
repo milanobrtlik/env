@@ -174,6 +174,34 @@ func ExampleParse_setDefaults() {
 	// Output: {Foo:foo Bar:bar}
 }
 
+// If a field declares an `envDefault`, a variable that is set to an empty value
+// is handled the same way as a variable that is not set at all: the default
+// value is used.
+//
+// Neither `required` nor `notEmpty` guards against this: `required` is already
+// satisfied by the default, and `notEmpty` only sees the value after the
+// default was applied.
+//
+// `env` cannot tell a variable that is explicitly set to an empty value from
+// one that is unset, so if that difference matters for a field, leave out the
+// `envDefault` and check `os.LookupEnv` yourself before applying a fallback.
+func ExampleParse_emptyValue() {
+	type Config struct {
+		Foo string `env:"EMPTY_FOO" envDefault:"foo"`
+		Bar string `env:"EMPTY_BAR,notEmpty" envDefault:"bar"`
+		Baz string `env:"EMPTY_BAZ,required" envDefault:"baz"`
+	}
+	os.Setenv("EMPTY_FOO", "")
+	os.Setenv("EMPTY_BAR", "")
+	os.Setenv("EMPTY_BAZ", "")
+	var cfg Config
+	if err := Parse(&cfg); err != nil {
+		fmt.Println(err)
+	}
+	fmt.Printf("%+v", cfg)
+	// Output: {Foo:foo Bar:bar Baz:baz}
+}
+
 // You might want to listen to value sets and, for example, log something or do
 // some other kind of logic.
 func ExampleParseWithOptions_onSet() {
